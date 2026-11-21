@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meri Dukaan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ===== 1. RANG (colors) — light aur dark dono ke liye ===== */
+  :root {
+    --bg: #ffffff;
+    --surface: #f4f5f2;
+    --ink: #1d1b18;
+    --muted: #6b675f;
+    --line: #e2e0da;
+    --red: #b3261e;
+    --haldi: #f6c343;
+    --green: #2e7d32;
+    --warn: #b45309;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181a; --surface: #212427; --ink: #f1efe9; --muted: #a8a49b;
+      --line: #34373b; --red: #e5675d; --haldi: #f6c343; --green: #6cc070; --warn: #f0a24a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181a; --surface: #212427; --ink: #f1efe9; --muted: #a8a49b;
+    --line: #34373b; --red: #e5675d; --haldi: #f6c343; --green: #6cc070; --warn: #f0a24a;
+    color-scheme: dark;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: inherit; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hind", "Segoe UI", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  h1, h2, h3 { font-family: "Baloo 2", "Hind", Arial, sans-serif; line-height: 1.15; margin: 0; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--haldi); outline-offset: 2px; }
+
+  /* ===== 2. SIGNBOARD (header) ===== */
+  .signboard {
+    background: #b3261e;
+    color: #fff;
+    text-align: center;
+    padding: 22px 16px 18px;
+    border-bottom: 6px solid var(--haldi);
+  }
+  .signboard h1 {
+    color: #f6c343;
+    font-size: clamp(32px, 7vw, 56px);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+  .signboard p { margin: 4px 0 0; opacity: 0.92; }
+
+  /* ===== 3. MENU (tabs) ===== */
+  nav {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 8px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  nav a {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  nav a.active { background: var(--ink); color: var(--bg); }
+  nav .spacer { flex: 1; }
+  nav .owner { color: var(--muted); font-weight: 500; }
+  nav .owner.active { color: var(--bg); }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 20px 16px 110px; }
+  .view { display: none; }
+  .view.show { display: block; }
+  .view > h2 { font-size: 28px; margin-bottom: 12px; }
+  .hint { color: var(--muted); margin: 0 0 16px; }
+
+  /* ===== 4. DUKAAN: search, categories, products ===== */
+  .search {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    margin-bottom: 12px;
+  }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .chip {
+    padding: 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .chip.on { background: var(--haldi); border-color: var(--haldi); color: #1d1b18; font-weight: 600; }
+
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 12px;
+  }
+  .product {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .product .emoji { font-size: 44px; line-height: 1.1; }
+  .product h3 { font-size: 19px; }
+  .product .price { font-weight: 600; font-size: 18px; }
+  .stock { font-size: 14px; color: var(--muted); }
+  .stock.low { color: var(--warn); }
+  .stock.out { color: var(--red); font-weight: 600; }
+  .product .action { margin-top: auto; padding-top: 8px; }
+
+  /* ===== 5. BUTTONS ===== */
+  .btn {
+    display: inline-block;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    background: var(--ink);
+    color: var(--bg);
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+  }
+  .btn.full { width: 100%; }
+  .btn.green { background: var(--green); color: #fff; }
+  .btn.red { background: var(--red); color: #fff; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.small { padding: 5px 10px; font-size: 14px; }
+
+  .stepper { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .stepper button {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .stepper span { font-weight: 600; min-width: 24px; text-align: center; }
+
+  /* ===== 6. NEECHE WALI CART PATTI ===== */
+  .cartbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--green);
+    color: #fff;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 5;
+  }
+  .cartbar.show { display: flex; }
+
+  /* ===== 7. FORMS aur TABLES ===== */
+  .box {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+  .box h3 { font-size: 21px; margin-bottom: 10px; }
+  .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: end; }
+  label { display: block; font-size: 14px; color: var(--muted); }
+  label input, label select {
+    display: block;
+    width: 100%;
+    margin-top: 3px;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-size: 14px; color: var(--muted); font-weight: 500; }
+  td.num, th.num { text-align: right; }
+  tr.total td { font-weight: 600; font-size: 18px; border-bottom: none; }
+  .error { color: var(--red); font-weight: 600; min-height: 1.5em; margin: 8px 0 0; }
+  .empty { color: var(--muted); padding: 20px 0; text-align: center; }
+
+  /* ===== 8. HISAAB ===== */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: var(--surface); border-radius: 12px; padding: 16px; }
+  .stat b { display: block; font-family: "Baloo 2", Arial, sans-serif; font-size: 34px; line-height: 1.1; }
+  .stat span { color: var(--muted); }
+  .bars { display: grid; gap: 6px; }
+  .bar-row { display: grid; grid-template-columns: 70px 1fr 80px; align-items: center; gap: 8px; font-size: 14px; }
+  .bar { height: 14px; background: var(--haldi); border-radius: 4px; min-width: 2px; }
+
+  /* ===== 9. TOAST (chhota message) ===== */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ===== 10. PRINT: sirf bill chhape ===== */
+  #print-area { display: none; }
+  @media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { display: block; position: absolute; top: 0; left: 0; width: 100%; color: #000; }
+  }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="signboard">
+  <h1 id="shop-naam">Meri Dukaan</h1>
+  <p id="shop-info"></p>
+</header>
+
+<nav>
+  <a href="#dukaan" data-view="dukaan">Dukaan</a>
+  <a href="#cart" data-view="cart">Cart <span id="nav-count"></span></a>
+  <span class="spacer"></span>
+  <a href="#bill" data-view="bill" class="owner">Counter Bill</a>
+  <a href="#saaman" data-view="saaman" class="owner">Saaman</a>
+  <a href="#hisaab" data-view="hisaab" class="owner">Hisaab</a>
+</nav>
+
+<main class="container">
+
+  <!-- ========== GRAHAK: DUKAAN ========== -->
+  <section class="view" id="view-dukaan">
+    <input class="search" id="search" type="search" placeholder="Saaman dhoondho… jaise atta, doodh" oninput="renderShop()">
+    <div class="chips" id="chips"></div>
+    <div class="products" id="product-grid"></div>
+  </section>
+
+  <!-- ========== GRAHAK: CART ========== -->
+  <section class="view" id="view-cart">
+    <h2>Aapka Cart</h2>
+    <div id="cart-list"></div>
+    <div class="box" id="order-box">
+      <h3>Order WhatsApp pe bhejo</h3>
+      <div class="form">
+        <label>Aapka naam <input id="cust-naam" placeholder="Rahul"></label>
+        <label>Ghar ka pata <input id="cust-pata" placeholder="Gali no. 4, Sector 6"></label>
+      </div>
+      <p class="error" id="order-error"></p>
+      <a class="btn green full" id="wa-btn" href="#cart" target="_blank" rel="noopener" onclick="return sendWhatsApp(this)">WhatsApp pe order bhejo</a>
+      <p class="hint" style="margin-top:10px">Order dukaandaar ke WhatsApp pe jayega. Wo confirm karke saaman bhej denge.</p>
+    </div>
+  </section>
+
+  <!-- ========== DUKAANDAAR: COUNTER BILL ========== -->
+  <section class="view" id="view-bill">
+    <h2>Counter Bill</h2>
+    <p class="hint">Dukaan pe aaye grahak ka bill yahan banao. Bill save karne pe stock apne aap kam ho jayega.</p>
+    <div class="box">
+      <div class="form">
+        <label>Saaman <select id="bill-product"></select></label>
+        <label>Kitna <input id="bill-qty" type="number" min="1" value="1"></label>
+        <button class="btn" onclick="addToBill()">Bill mein jodo</button>
+      </div>
+      <p class="error" id="bill-error"></p>
+    </div>
+    <div class="box">
+      <div class="table-wrap"><table id="bill-table"></table></div>
+      <div class="form" style="margin-top:12px">
+        <label>Grahak ka naam (zaroori nahi) <input id="bill-cust"></label>
+        <button class="btn green" onclick="saveBill()">Bill save karo</button>
+      </div>
+    </div>
+    <div id="last-bill"></div>
+  </section>
+
+  <!-- ========== DUKAANDAAR: SAAMAN ========== -->
+  <section class="view" id="view-saaman">
+    <h2>Saaman aur Dukaan</h2>
+    <div class="box">
+      <h3 id="form-title">Naya saaman jodo</h3>
+      <div class="form">
+        <label>Naam <input id="p-naam" placeholder="Atta (5 kg)"></label>
+        <label>Daam (₹) <input id="p-daam" type="number" min="0"></label>
+        <label>Stock <input id="p-stock" type="number" min="0"></label>
+        <label>Category <input id="p-cat" placeholder="Rashan" list="cat-list"></label>
+        <label>Emoji <input id="p-emoji" placeholder="🌾" maxlength="4"></label>
+        <button class="btn" id="p-save" onclick="saveProduct()">Saaman jodo</button>
+      </div>
+      <datalist id="cat-list"></datalist>
+      <p class="error" id="p-error"></p>
+    </div>
+
+    <div class="box">
+      <h3>Saara saaman</h3>
+      <div class="table-wrap"><table id="saaman-table"></table></div>
+    </div>
+
+    <div class="box">
+      <h3>Dukaan ki jaankari</h3>
+      <div class="form">
+        <label>Dukaan ka naam <input id="s-naam"></label>
+        <label>Pata <input id="s-pata"></label>
+        <label>WhatsApp number (10 digit) <input id="s-phone" inputmode="numeric" maxlength="10"></label>
+        <button class="btn" onclick="saveDukaan()">Jaankari save karo</button>
+      </div>
+      <p class="error" id="s-error"></p>
+    </div>
+
+    <div class="box">
+      <h3>Shuru se shuru karo</h3>
+      <p class="hint">Saara saaman, bills aur cart mit jayega aur demo saaman wapas aa jayega.</p>
+      <button class="btn red" id="reset-btn" onclick="resetAll()">Sab data mitao</button>
+    </div>
+  </section>
+
+  <!-- ========== DUKAANDAAR: HISAAB ========== -->
+  <section class="view" id="view-hisaab">
+    <h2>Aaj ka Hisaab</h2>
+    <div class="stats" id="stats"></div>
+    <div class="box">
+      <h3>Pichle 7 din ki bikri</h3>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="box">
+      <h3>Stock khatam hone wala</h3>
+      <div id="low-stock"></div>
+    </div>
+    <div class="box">
+      <h3>Aaj ke bills</h3>
+      <div class="table-wrap"><table id="today-bills"></table></div>
+    </div>
+  </section>
+</main>
+
+<a class="cartbar" id="cartbar" href="#cart">
+  <span id="cartbar-text"></span>
+  <span>Cart dekho</span>
+</a>
+<div class="toast" id="toast"></div>
+<div id="print-area"></div>
+
+<script>
+/* =========================================================
+   STEP 1: DATA — shuruaati saaman (demo)
+   Har product ek "object" hai: { naam, daam, stock ... }
+   Saare products ek "array" [ ] mein hain.
+   ========================================================= */
+const DEMO_SAAMAN = [
+  { id: 1, naam: "Atta (5 kg)",     daam: 250, stock: 20, cat: "Rashan",   emoji: "🌾" },
+  { id: 2, naam: "Chawal (1 kg)",   daam: 80,  stock: 30, cat: "Rashan",   emoji: "🍚" },
+  { id: 3, naam: "Toor Dal (1 kg)", daam: 160, stock: 15, cat: "Rashan",   emoji: "🫘" },
+  { id: 4, naam: "Chini (1 kg)",    daam: 45,  stock: 25, cat: "Rashan",   emoji: "🍬" },
+  { id: 5, naam: "Sarson Tel (1 L)",daam: 180, stock: 4,  cat: "Rashan",   emoji: "🛢️" },
+  { id: 6, naam: "Doodh (1 L)",     daam: 66,  stock: 12, cat: "Dairy",    emoji: "🥛" },
+  { id: 7, naam: "Paneer (200 g)",  daam: 90,  stock: 6,  cat: "Dairy",    emoji: "🧀" },
+  { id: 8, naam: "Anday (6)",       daam: 48,  stock: 10, cat: "Dairy",    emoji: "🥚" },
+  { id: 9, naam: "Biscuit",         daam: 30,  stock: 40, cat: "Snacks",   emoji: "🍪" },
+  { id: 10, naam: "Namkeen",        daam: 20,  stock: 0,  cat: "Snacks",   emoji: "🥨" },
+  { id: 11, naam: "Chai Patti",     daam: 120, stock: 18, cat: "Snacks",   emoji: "🍵" },
+  { id: 12, naam: "Sabun",          daam: 35,  stock: 22, cat: "Ghar ka",  emoji: "🧼" }
+];
+
+/* =========================================================
+   STEP 2: localStorage — data browser mein save karna
+   taaki refresh ke baad bhi rahe
+   ========================================================= */
+function load(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+function save(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+}
+
+let dukaan   = load("dukaan", { naam: "Sharma General Store", pata: "Main Bazaar, Bahadurgarh", phone: "9876543210" });
+let products = load("products", DEMO_SAAMAN);
+let cart     = load("cart", {});      // { productId: kitne }
+let sales    = load("sales", []);     // saare bills
+let bill     = [];                    // abhi ban raha counter bill
+let category = "Sab";
+let editId   = null;                  // kaunsa product edit ho raha hai
+let deleteId = null;                  // delete ke liye "Pakka?" wala
+
+/* =========================================================
+   STEP 3: Chhote helper functions
+   ========================================================= */
+function rupaye(n) { return "₹" + Number(n).toLocaleString("en-IN"); }
+function findProduct(id) { return products.find(p => p.id === id); }
+function aajKiTareekh(d = new Date()) { return d.toLocaleDateString("en-CA"); } // 2026-11-21
+// User ka likha text HTML mein daalne se pehle safe banana
+function esc(text) {
+  return String(text).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2000);
+}
+function stockText(p) {
+  if (p.stock <= 0) return '<span class="stock out">Stock khatam</span>';
+  if (p.stock < 5) return '<span class="stock low">Sirf ' + p.stock + ' bache</span>';
+  return '<span class="stock">Stock: ' + p.stock + '</span>';
+}
+
+/* =========================================================
+   STEP 4: Header (signboard)
+   ========================================================= */
+function renderHeader() {
+  document.getElementById("shop-naam").textContent = dukaan.naam;
+  document.getElementById("shop-info").textContent = "📍 " + dukaan.pata + "   📞 " + dukaan.phone;
+  document.title = dukaan.naam;
+}
+
+/* =========================================================
+   STEP 5: Dukaan — products dikhana (loop se!)
+   ========================================================= */
+function renderShop() {
+  // Categories ke chips
+  const cats = ["Sab", ...new Set(products.map(p => p.cat))];
+  document.getElementById("chips").innerHTML = cats.map(c =>
+    '<button class="chip ' + (c === category ? "on" : "") + '" onclick="setCategory(\'' + esc(c) + '\')">' + esc(c) + '</button>'
+  ).join("");
+
+  // Search aur category se filter
+  const khoj = document.getElementById("search").value.trim().toLowerCase();
+  const dikhao = products.filter(p =>
+    (category === "Sab" || p.cat === category) &&
+    p.naam.toLowerCase().includes(khoj)
+  );
+
+  const grid = document.getElementById("product-grid");
+  if (dikhao.length === 0) {
+    grid.innerHTML = '<p class="empty">Ye saaman nahi mila. Kuch aur dhoondho.</p>';
+    return;
+  }
+
+  grid.innerHTML = dikhao.map(p => {
+    const qty = cart[p.id] || 0;
+    let action;
+    if (p.stock <= 0) {
+      action = '<button class="btn full" disabled>Stock khatam</button>';
+    } else if (qty === 0) {
+      action = '<button class="btn full" onclick="changeCart(' + p.id + ', 1)">Cart mein daalo</button>';
+    } else {
+      action = '<div class="stepper">' +
+        '<button onclick="changeCart(' + p.id + ', -1)" aria-label="Kam karo">−</button>' +
+        '<span>' + qty + '</span>' +
+        '<button onclick="changeCart(' + p.id + ', 1)" aria-label="Badhao">+</button></div>';
+    }
+    return '<div class="product">' +
+      '<div class="emoji">' + esc(p.emoji || "📦") + '</div>' +
+      '<h3>' + esc(p.naam) + '</h3>' +
+      '<div class="price">' + rupaye(p.daam) + '</div>' +
+      stockText(p) +
+      '<div class="action">' + action + '</div></div>';
+  }).join("");
+}
+function setCategory(c) { category = c; renderShop(); }
+
+/* =========================================================
+   STEP 6: Cart
+   ========================================================= */
+function changeCart(id, kitna) {
+  const p = findProduct(id);
+  const naya = (cart[id] || 0) + kitna;
+  if (naya > p.stock) { toast("Sirf " + p.stock + " hi stock mein hai"); return; }
+  if (naya <= 0) delete cart[id];
+  else cart[id] = naya;
+  save("cart", cart);
+  renderShop();
+  renderCart();
+}
+
+function cartTotal() {
+  let total = 0, items = 0;
+  for (const id in cart) {
+    const p = findProduct(Number(id));
+    if (p) { total += p.daam * cart[id]; items += cart[id]; }
+  }
+  return { total, items };
+}
+
+function renderCart() {
+  const { total, items } = cartTotal();
+  document.getElementById("nav-count").textContent = items ? "(" + items + ")" : "";
+  const bar = document.getElementById("cartbar");
+  document.getElementById("cartbar-text").textContent = items + " saaman  |  " + rupaye(total);
+  bar.classList.toggle("show", items > 0 && location.hash !== "#cart");
+
+  const list = document.getElementById("cart-list");
+  const orderBox = document.getElementById("order-box");
+  if (items === 0) {
+    list.innerHTML = '<p class="empty">Cart khaali hai. <a href="#dukaan">Dukaan pe jao</a> aur saaman chuno.</p>';
+    orderBox.style.display = "none";
+    return;
+  }
+  orderBox.style.display = "block";
+  let rows = '<tr><th>Saaman</th><th>Kitna</th><th class="num">Rakam</th></tr>';
+  for (const id in cart) {
+    const p = findProduct(Number(id));
+    if (!p) continue;
+    rows += '<tr><td>' + esc(p.emoji) + ' ' + esc(p.naam) + '<br><span class="stock">' + rupaye(p.daam) + ' har ek</span></td>' +
+      '<td><div class="stepper" style="justify-content:flex-start">' +
+      '<button onclick="changeCart(' + p.id + ', -1)" aria-label="Kam karo">−</button><span>' + cart[id] + '</span>' +
+      '<button onclick="changeCart(' + p.id + ', 1)" aria-label="Badhao">+</button></div></td>' +
+      '<td class="num">' + rupaye(p.daam * cart[id]) + '</td></tr>';
+  }
+  rows += '<tr class="total"><td colspan="2">Kul rakam</td><td class="num">' + rupaye(total) + '</td></tr>';
+  list.innerHTML = '<div class="box"><div class="table-wrap"><table>' + rows + '</table></div></div>';
+}
+
+/* =========================================================
+   STEP 7: WhatsApp pe order
+   ========================================================= */
+function sendWhatsApp(link) {
+  const naam = document.getElementById("cust-naam").value.trim();
+  const pata = document.getElementById("cust-pata").value.trim();
+  const err = document.getElementById("order-error");
+  if (!naam || !pata) {
+    err.textContent = "Order bhejne ke liye naam aur pata dono likho.";
+    return false;   // link nahi khulega
+  }
+  err.textContent = "";
+
+  let msg = "Namaste " + dukaan.naam + "! Mera order:\n\n";
+  for (const id in cart) {
+    const p = findProduct(Number(id));
+    if (p) msg += "- " + p.naam + " x " + cart[id] + " = " + rupaye(p.daam * cart[id]) + "\n";
+  }
+  msg += "\nKul: " + rupaye(cartTotal().total) + "\nNaam: " + naam + "\nPata: " + pata;
+
+  link.href = "https://wa.me/91" + dukaan.phone + "?text=" + encodeURIComponent(msg);
+  return true;      // ab link khulega
+}
+
+/* =========================================================
+   STEP 8: Saaman (admin) — jodo, badlo, hatao
+   ========================================================= */
+function renderSaaman() {
+  document.getElementById("cat-list").innerHTML =
+    [...new Set(products.map(p => p.cat))].map(c => '<option value="' + esc(c) + '">').join("");
+
+  let rows = '<tr><th>Saaman</th><th class="num">Daam</th><th>Stock</th><th></th></tr>';
+  products.forEach(p => {
+    rows += '<tr><td>' + esc(p.emoji) + ' ' + esc(p.naam) + '<br><span class="stock">' + esc(p.cat) + '</span></td>' +
+      '<td class="num">' + rupaye(p.daam) + '</td>' +
+      '<td><div class="stepper" style="justify-content:flex-start">' +
+      '<button onclick="changeStock(' + p.id + ', -1)" aria-label="Stock kam">−</button>' +
+      '<span>' + p.stock + '</span>' +
+      '<button onclick="changeStock(' + p.id + ', 1)" aria-label="Stock badhao">+</button></div></td>' +
+      '<td><button class="btn ghost small" onclick="editProduct(' + p.id + ')">Badlo</button> ' +
+      '<button class="btn small ' + (deleteId === p.id ? "red" : "ghost") + '" onclick="deleteProduct(' + p.id + ')">' +
+      (deleteId === p.id ? "Pakka hatao?" : "Hatao") + '</button></td></tr>';
+  });
+  document.getElementById("saaman-table").innerHTML = products.length ? rows :
+    '<tr><td class="empty">Abhi koi saaman nahi hai. Upar se jodo.</td></tr>';
+
+  document.getElementById("s-naam").value = dukaan.naam;
+  document.getElementById("s-pata").value = dukaan.pata;
+  document.getElementById("s-phone").value = dukaan.phone;
+}
+
+function saveProduct() {
+  const naam = document.getElementById("p-naam").value.trim();
+  const daam = Number(document.getElementById("p-daam").value);
+  const stock = Number(document.getElementById("p-stock").value);
+  const cat = document.getElementById("p-cat").value.trim() || "Aur";
+  const emoji = document.getElementById("p-emoji").value.trim() || "📦";
+  const err = document.getElementById("p-error");
+
+  if (!naam) { err.textContent = "Saaman ka naam likho."; return; }
+  if (!(daam > 0)) { err.textContent = "Daam 0 se zyada hona chahiye."; return; }
+  if (stock < 0 || !Number.isInteger(stock)) { err.textContent = "Stock poori sankhya mein likho (0 ya zyada)."; return; }
+  err.textContent = "";
+
+  if (editId) {
+    const p = findProduct(editId);
+    Object.assign(p, { naam, daam, stock, cat, emoji });
+    toast(naam + " badal diya");
+  } else {
+    const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    products.push({ id: newId, naam, daam, stock, cat, emoji });
+    toast(naam + " jod diya");
+  }
+  save("products", products);
+  clearProductForm();
+  renderAll();
+}
+
+function editProduct(id) {
+  const p = findProduct(id);
+  editId = id;
+  document.getElementById("p-naam").value = p.naam;
+  document.getElementById("p-daam").value = p.daam;
+  document.getElementById("p-stock").value = p.stock;
+  document.getElementById("p-cat").value = p.cat;
+  document.getElementById("p-emoji").value = p.emoji;
+  document.getElementById("form-title").textContent = "Saaman badlo: " + p.naam;
+  document.getElementById("p-save").textContent = "Badlav save karo";
+  document.getElementById("p-naam").focus();
+}
+
+function clearProductForm() {
+  editId = null;
+  ["p-naam", "p-daam", "p-stock", "p-cat", "p-emoji"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("form-title").textContent = "Naya saaman jodo";
+  document.getElementById("p-save").textContent = "Saaman jodo";
+}
+
+function deleteProduct(id) {
+  if (deleteId !== id) { deleteId = id; renderSaaman(); return; }  // pehla click: "Pakka?"
+  const p = findProduct(id);
+  products = products.filter(x => x.id !== id);
+  delete cart[id];
+  deleteId = null;
+  save("products", products);
+  save("cart", cart);
+  toast(p.naam + " hata diya");
+  renderAll();
+}
+
+function changeStock(id, kitna) {
+  const p = findProduct(id);
+  p.stock = Math.max(0, p.stock + kitna);
+  if (cart[id] > p.stock) { cart[id] = p.stock; if (!cart[id]) delete cart[id]; save("cart", cart); }
+  save("products", products);
+  renderAll();
+}
+
+function saveDukaan() {
+  const naam = document.getElementById("s-naam").value.trim();
+  const pata = document.getElementById("s-pata").value.trim();
+  const phone = document.getElementById("s-phone").value.trim();
+  const err = document.getElementById("s-error");
+  if (!naam || !pata) { err.textContent = "Dukaan ka naam aur pata dono likho."; return; }
+  if (!/^[6-9]\d{9}$/.test(phone)) { err.textContent = "Sahi 10 digit ka mobile number likho."; return; }
+  err.textContent = "";
+  dukaan = { naam, pata, phone };
+  save("dukaan", dukaan);
+  renderHeader();
+  toast("Dukaan ki jaankari save ho gayi");
+}
+
+let resetPakka = false;
+function resetAll() {
+  const btn = document.getElementById("reset-btn");
+  if (!resetPakka) {
+    resetPakka = true;
+    btn.textContent = "Pakka? Dobara dabao";
+    setTimeout(() => { resetPakka = false; btn.textContent = "Sab data mitao"; }, 4000);
+    return;
+  }
+  ["dukaan", "products", "cart", "sales"].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+  location.reload();
+}
+
+/* =========================================================
+   STEP 9: Counter Bill
+   ========================================================= */
+function renderBillForm() {
+  const select = document.getElementById("bill-product");
+  select.innerHTML = products.filter(p => p.stock > 0).map(p =>
+    '<option value="' + p.id + '">' + esc(p.naam) + ' (' + rupaye(p.daam) + ')</option>').join("");
+  renderBillTable();
+}
+
+function billTotal() { return bill.reduce((sum, b) => sum + b.daam * b.qty, 0); }
+
+function renderBillTable() {
+  const table = document.getElementById("bill-table");
+  if (bill.length === 0) {
+    table.innerHTML = '<tr><td class="empty">Bill khaali hai. Upar se saaman jodo.</td></tr>';
+    return;
+  }
+  let rows = '<tr><th>Saaman</th><th class="num">Kitna</th><th class="num">Rakam</th><th></th></tr>';
+  bill.forEach((b, i) => {
+    rows += '<tr><td>' + esc(b.naam) + '</td><td class="num">' + b.qty + '</td>' +
+      '<td class="num">' + rupaye(b.daam * b.qty) + '</td>' +
+      '<td><button class="btn ghost small" onclick="removeFromBill(' + i + ')">Hatao</button></td></tr>';
+  });
+  rows += '<tr class="total"><td colspan="2">Kul</td><td class="num">' + rupaye(billTotal()) + '</td><td></td></tr>';
+  table.innerHTML = rows;
+}
+
+function addToBill() {
+  const id = Number(document.getElementById("bill-product").value);
+  const qty = Number(document.getElementById("bill-qty").value);
+  const err = document.getElementById("bill-error");
+  const p = findProduct(id);
+  if (!p) { err.textContent = "Pehle saaman chuno."; return; }
+  if (!(qty > 0) || !Number.isInteger(qty)) { err.textContent = "Kitna, poori sankhya mein likho."; return; }
+  const pehleSe = bill.find(b => b.id === id);
+  const kul = qty + (pehleSe ? pehleSe.qty : 0);
+  if (kul > p.stock) { err.textContent = p.naam + " ka sirf " + p.stock + " stock hai."; return; }
+  err.textContent = "";
+  if (pehleSe) pehleSe.qty = kul;
+  else bill.push({ id: p.id, naam: p.naam, daam: p.daam, qty });
+  document.getElementById("bill-qty").value = 1;
+  renderBillTable();
+}
+
+function removeFromBill(i) { bill.splice(i, 1); renderBillTable(); }
+
+function saveBill() {
+  const err = document.getElementById("bill-error");
+  if (bill.length === 0) { err.textContent = "Bill mein koi saaman nahi hai."; return; }
+  // Stock kam karo
+  bill.forEach(b => { const p = findProduct(b.id); if (p) p.stock = Math.max(0, p.stock - b.qty); });
+  const sale = {
+    no: sales.length + 1,
+    time: new Date().toISOString(),
+    grahak: document.getElementById("bill-cust").value.trim(),
+    items: bill,
+    total: billTotal()
+  };
+  sales.push(sale);
+  save("sales", sales);
+  save("products", products);
+  bill = [];
+  document.getElementById("bill-cust").value = "";
+  toast("Bill no. " + sale.no + " save ho gaya");
+  showLastBill(sale);
+  renderAll();
+}
+
+function billHTML(sale) {
+  const d = new Date(sale.time);
+  let rows = sale.items.map(b =>
+    '<tr><td>' + esc(b.naam) + '</td><td class="num">' + b.qty + ' × ' + rupaye(b.daam) + '</td><td class="num">' + rupaye(b.qty * b.daam) + '</td></tr>').join("");
+  return '<h3 style="text-align:center">' + esc(dukaan.naam) + '</h3>' +
+    '<p style="text-align:center;margin:0">' + esc(dukaan.pata) + ', 📞 ' + esc(dukaan.phone) + '</p>' +
+    '<p>Bill no. ' + sale.no + '<br>' + d.toLocaleString("en-IN") +
+    (sale.grahak ? '<br>Grahak: ' + esc(sale.grahak) : '') + '</p>' +
+    '<table>' + rows + '<tr class="total"><td colspan="2">Kul</td><td class="num">' + rupaye(sale.total) + '</td></tr></table>' +
+    '<p style="text-align:center">Dhanyavaad! Phir aaiye.</p>';
+}
+
+function showLastBill(sale) {
+  document.getElementById("last-bill").innerHTML =
+    '<div class="box">' + billHTML(sale) +
+    '<button class="btn" onclick="printBill(' + sale.no + ')">Bill print karo</button></div>';
+}
+
+function printBill(no) {
+  const sale = sales.find(s => s.no === no);
+  document.getElementById("print-area").innerHTML = billHTML(sale);
+  window.print();
+}
+
+/* =========================================================
+   STEP 10: Hisaab
+   ========================================================= */
+function renderHisaab() {
+  const aaj = aajKiTareekh();
+  const aajKeBills = sales.filter(s => aajKiTareekh(new Date(s.time)) === aaj);
+  const aajKiBikri = aajKeBills.reduce((sum, s) => sum + s.total, 0);
+  const aajKeItems = aajKeBills.reduce((sum, s) => sum + s.items.reduce((a, b) => a + b.qty, 0), 0);
+  const stockKiKeemat = products.reduce((sum, p) => sum + p.daam * p.stock, 0);
+
+  document.getElementById("stats").innerHTML =
+    '<div class="stat"><b>' + rupaye(aajKiBikri) + '</b><span>aaj ki bikri</span></div>' +
+    '<div class="stat"><b>' + aajKeBills.length + '</b><span>aaj ke bills</span></div>' +
+    '<div class="stat"><b>' + aajKeItems + '</b><span>saaman bika</span></div>' +
+    '<div class="stat"><b>' + rupaye(stockKiKeemat) + '</b><span>dukaan mein maal</span></div>';
+
+  // Pichle 7 din
+  const din = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = aajKiTareekh(d);
+    const total = sales.filter(s => aajKiTareekh(new Date(s.time)) === key).reduce((a, s) => a + s.total, 0);
+    din.push({ label: i === 0 ? "Aaj" : d.toLocaleDateString("en-IN", { day: "numeric", month: "short" }), total });
+  }
+  const max = Math.max(1, ...din.map(d => d.total));
+  document.getElementById("bars").innerHTML = din.map(d =>
+    '<div class="bar-row"><span>' + d.label + '</span><div class="bar" style="width:' + (d.total / max * 100) + '%"></div><span class="num">' + rupaye(d.total) + '</span></div>').join("");
+
+  // Kam stock
+  const kam = products.filter(p => p.stock < 5);
+  document.getElementById("low-stock").innerHTML = kam.length
+    ? kam.map(p => '<p style="margin:4px 0">' + esc(p.emoji) + ' ' + esc(p.naam) + ': ' + stockText(p) + '</p>').join("")
+    : '<p class="hint">Sab saaman theek maatra mein hai. 👍</p>';
+
+  // Aaj ke bills
+  const table = document.getElementById("today-bills");
+  if (aajKeBills.length === 0) {
+    table.innerHTML = '<tr><td class="empty">Aaj abhi tak koi bill nahi bana. <a href="#bill">Counter Bill</a> se banao.</td></tr>';
+    return;
+  }
+  table.innerHTML = '<tr><th>No.</th><th>Samay</th><th>Grahak</th><th class="num">Rakam</th><th></th></tr>' +
+    aajKeBills.slice().reverse().map(s =>
+      '<tr><td>' + s.no + '</td><td>' + new Date(s.time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + '</td>' +
+      '<td>' + (esc(s.grahak) || "—") + '</td><td class="num">' + rupaye(s.total) + '</td>' +
+      '<td><button class="btn ghost small" onclick="printBill(' + s.no + ')">Print</button></td></tr>').join("");
+}
+
+/* =========================================================
+   STEP 11: Page badalna (#dukaan, #cart ...)
+   ========================================================= */
+const VIEWS = ["dukaan", "cart", "bill", "saaman", "hisaab"];
+function showView() {
+  let naam = location.hash.replace("#", "");
+  if (!VIEWS.includes(naam)) naam = "dukaan";
+  VIEWS.forEach(v => document.getElementById("view-" + v).classList.toggle("show", v === naam));
+  document.querySelectorAll("nav a").forEach(a => a.classList.toggle("active", a.dataset.view === naam));
+  renderCart();
+  window.scrollTo(0, 0);
+}
+
+function renderAll() {
+  renderHeader();
+  renderShop();
+  renderCart();
+  renderSaaman();
+  renderBillForm();
+  renderHisaab();
+}
+
+window.addEventListener("hashchange", showView);
+renderAll();
+showView();
+</script>
+</body>
+</html>
