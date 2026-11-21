@@ -412,7 +412,7 @@ function save(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
 }
 
-let dukaan   = load("dukaan", { naam: "Sharma General Store", pata: "Main Bazaar, Bahadurgarh", phone: "9876543210" });
+let dukaan   = load("dukaan", { naam: "General Store", pata: "Main Bazaar, XYZ", phone: "9541882893" });
 let products = load("products", DEMO_SAAMAN);
 let cart     = load("cart", {});      // { productId: kitne }
 let sales    = load("sales", []);     // saare bills
